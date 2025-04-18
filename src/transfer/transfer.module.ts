@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CreateTransferUseCase, GetCompaniesWithTransfersLastMonthUseCase } from './application';
-import { CompanyRepositoryMongoAdapter, CompanySchema } from 'src/company/infrastructure';
+import { CompanyRepositoryMongoAdapter, CompanySchema } from '../company/infrastructure';
 import { TransferController, TransferRepositoryMongoAdapter, TransferSchema } from './infrastructure';
 
 @Module({

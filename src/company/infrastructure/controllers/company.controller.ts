@@ -1,6 +1,10 @@
 import { Body, ConflictException, Controller, Get, Post } from "@nestjs/common";
-import { CreateCompanyDto, GetCompaniesLastMonthUseCase, SaveCompanyUseCase } from "src/company/application";
-import { Company } from "src/company/domain";
+import { CreateCompanyDto } from "../../../company/application/dto/create-company.dto";
+import {   SaveCompanyUseCase } from "../../../company/application/use-cases/register-company.usecase";
+import {  GetCompaniesLastMonthUseCase } from "../../../company/application/use-cases/get-companies-last-month.usecase";
+
+
+import { Company } from "../../../company/domain";
 
 
 

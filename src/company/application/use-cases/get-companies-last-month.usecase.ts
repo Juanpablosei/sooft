@@ -1,4 +1,4 @@
-import { Company, CompanyRepository } from "src/company/domain";
+import { Company, CompanyRepository } from "../../../company/domain";
 
 
 

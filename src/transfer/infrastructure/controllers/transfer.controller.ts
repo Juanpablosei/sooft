@@ -1,6 +1,9 @@
 import { Controller, Post, Get, Body } from '@nestjs/common';
-import { CreateTransferDto, CreateTransferUseCase, GetCompaniesWithTransfersLastMonthUseCase } from 'src/transfer/application';
-import { Transfer } from 'src/transfer/domain';
+import { CreateTransferUseCase } from '../../application/use-cases/create-transfer.usecase';
+import { GetCompaniesWithTransfersLastMonthUseCase }
+ from '../../application/use-cases/get-companies-with-transfers-last-month.usecase';
+import { Transfer } from '../../domain/entities/transfer.entity';
+import { CreateTransferDto } from '../../application/dto/create-transfer.dto';
 
 
 

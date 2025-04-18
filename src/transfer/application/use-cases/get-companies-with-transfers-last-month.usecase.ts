@@ -1,5 +1,5 @@
-import { CompanyRepository } from "src/company/domain";
-import { TransferRepository } from "src/transfer/domain";
+import { CompanyRepository } from "../../../company/domain";
+import { TransferRepository } from "../../../transfer/domain";
 
 
 

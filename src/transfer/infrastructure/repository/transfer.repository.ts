@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document } from 'mongoose';
-import { Transfer, TransferRepository } from 'src/transfer/domain';
+import { Transfer, TransferRepository } from '../../../transfer/domain';
 
 
 interface TransferDocument extends Document {
