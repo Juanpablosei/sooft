@@ -1,8 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CreateTransferUseCase, GetCompaniesWithTransfersLastMonthUseCase } from './application';
-import { CompanyRepositoryMongoAdapter, CompanySchema } from '../company/infrastructure';
-import { TransferController, TransferRepositoryMongoAdapter, TransferSchema } from './infrastructure';
+import { CompanyRepositoryMongoAdapter } from '../company/infrastructure/repositories/company.repository';
+import {  CompanySchema } from '../company/infrastructure/schemas/company.schema';
+import { TransferController} from './infrastructure/controllers/transfer.controller';
+import { TransferSchema } from './infrastructure/schemas/transfer.schema';
+import { TransferRepositoryMongoAdapter } from './infrastructure/repository/transfer.repository';
+import { CreateTransferUseCase } from './application/use-cases/create-transfer.usecase';
+import { GetCompaniesWithTransfersLastMonthUseCase } from './application/use-cases/get-companies-with-transfers-last-month.usecase';
+
+
 
 @Module({
   imports: [
