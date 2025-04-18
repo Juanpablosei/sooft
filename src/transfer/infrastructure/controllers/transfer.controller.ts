@@ -1,8 +1,7 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
-import { CreateTransferDto } from 'src/transfer/application/dto/create-transfer.dto';
-import { CreateTransferUseCase } from 'src/transfer/application/use-cases/create-transfer.usecase';
-import { GetCompaniesWithTransfersLastMonthUseCase } from 'src/transfer/application/use-cases/get-companies-with-transfers-last-month.usecase';
-import { Transfer } from 'src/transfer/domain/entities/transfer.entity';
+import { Controller, Post, Get, Body } from '@nestjs/common';
+import { CreateTransferDto, CreateTransferUseCase, GetCompaniesWithTransfersLastMonthUseCase } from 'src/transfer/application';
+import { Transfer } from 'src/transfer/domain';
+
 
 
 @Controller('transfers')
@@ -12,7 +11,7 @@ export class TransferController {
     private readonly GetCompaniesWithTransfersLastMonthUseCase: GetCompaniesWithTransfersLastMonthUseCase,
   ) {}
 
-  @Post()
+  @Post("create")
   async create(@Body() transferDto: CreateTransferDto): Promise<Transfer> {
     const transfer = new Transfer(
       transferDto.amount,

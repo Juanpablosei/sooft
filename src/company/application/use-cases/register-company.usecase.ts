@@ -1,5 +1,5 @@
-import { Company } from "src/company/domain/entities/company.entity";
-import { CompanyRepository } from "src/company/domain/repositories/company.repository.port";
+import { Company, CompanyRepository } from "src/company/domain";
+
 
 
 export class SaveCompanyUseCase {

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Document } from 'mongoose';
-import { Transfer } from 'src/transfer/domain/entities/transfer.entity';
-import { TransferRepository } from 'src/transfer/domain/repositories/transfer.repository.port';
+import { Transfer, TransferRepository } from 'src/transfer/domain';
+
 
 interface TransferDocument extends Document {
   amount: number;

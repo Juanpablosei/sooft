@@ -1,8 +1,6 @@
-import { Controller, Post, Body, ConflictException, Get } from '@nestjs/common';
-import { CreateCompanyDto } from 'src/company/application/dto/create-company.dto';
-import { SaveCompanyUseCase } from 'src/company/application/use-cases/register-company.usecase';
-import { Company } from 'src/company/domain/entities/company.entity';
-import { GetCompaniesLastMonthUseCase } from '../../application/use-cases/get-companies-last-month.usecase';
+import { Body, ConflictException, Controller, Get, Post } from "@nestjs/common";
+import { CreateCompanyDto, GetCompaniesLastMonthUseCase, SaveCompanyUseCase } from "src/company/application";
+import { Company } from "src/company/domain";
 
 
 
@@ -14,7 +12,7 @@ export class CompanyController {
     private readonly getCompaniesLastMonthUseCase: GetCompaniesLastMonthUseCase,
   ) {}
 
-  @Post()
+  @Post('create')
   async create(@Body() companyDto: CreateCompanyDto): Promise<Company> {
     try {
       const company = new Company(

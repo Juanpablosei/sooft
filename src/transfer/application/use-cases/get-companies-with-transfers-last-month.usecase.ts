@@ -1,5 +1,6 @@
-import { CompanyRepository } from "src/company/domain/repositories/company.repository.port";
-import { TransferRepository } from "src/transfer/domain/repositories/transfer.repository.port";
+import { CompanyRepository } from "src/company/domain";
+import { TransferRepository } from "src/transfer/domain";
+
 
 
 export class GetCompaniesWithTransfersLastMonthUseCase {

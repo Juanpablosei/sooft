@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Company } from 'src/company/domain/entities/company.entity';
-import { CompanyRepository } from 'src/company/domain/repositories/company.repository.port';
+import { Company, CompanyRepository } from 'src/company/domain';
 import { CompanyDocument } from '../interface/company.document';
+
 
 
 @Injectable()
