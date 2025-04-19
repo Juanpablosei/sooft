@@ -1,89 +1,125 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TransferRepositoryMongoAdapter } from './transfer.repository';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { TransferRepositoryMongoAdapter } from './transfer.repository';
 import { Transfer } from '../../../transfer/domain';
 
 describe('TransferRepositoryMongoAdapter', () => {
   let repository: TransferRepositoryMongoAdapter;
-  let transferModel: jest.Mocked<Model<any>>;
+  let transferModel: Model<any>;
+
+  // Mock del modelo de Mongoose
+  const mockTransferModel = jest.fn().mockImplementation((data) => ({
+    ...data,
+    save: jest.fn().mockResolvedValue(data), // Simula el método save
+  }));
 
   beforeEach(async () => {
-    transferModel = {
-      create: jest.fn(),
-      save: jest.fn(),
-      find: jest.fn(),
-    } as any;
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransferRepositoryMongoAdapter,
         {
           provide: getModelToken('Transfer'),
-          useValue: transferModel,
+          useValue: mockTransferModel,
         },
       ],
     }).compile();
 
     repository = module.get<TransferRepositoryMongoAdapter>(TransferRepositoryMongoAdapter);
+    transferModel = module.get<Model<any>>(getModelToken('Transfer'));
   });
 
-  it('should be defined', () => {
-    expect(repository).toBeDefined();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
- 
+  describe('save', () => {
+    it('should save a transfer and return it', async () => {
+      const transfer = new Transfer(
+        1000.5,
+        '20-37121543-6',
+        '1234567890',
+        '0987654321',
+        new Date('2025-04-18T14:15:53.312Z'),
+      );
+
+      const result = await repository.save(transfer);
+
+      expect(mockTransferModel).toHaveBeenCalledWith({
+        amount: transfer.amount,
+        companyId: transfer.companyId,
+        creditAccount: transfer.creditAccount,
+        debitAccount: transfer.debitAccount,
+        date: transfer.date,
+      });
+      expect(result).toEqual(transfer);
+    });
+  });
 
   describe('findByDateRange', () => {
-    it('should return a list of transfers within the given date range', async () => {
-      const startDate = new Date('2025-03-01');
-      const endDate = new Date('2025-03-31');
+    it('should return transfers within the specified date range', async () => {
+      const startDate = new Date('2025-04-01T00:00:00.000Z');
+      const endDate = new Date('2025-04-30T23:59:59.999Z');
 
       const mockTransfers = [
         {
-          amount: 1000,
-          companyId: '20304050607',
+          amount: 1000.5,
+          companyId: '20-37121543-6',
           creditAccount: '1234567890',
           debitAccount: '0987654321',
-          date: new Date('2025-03-15'),
+          date: new Date('2025-04-10T12:00:00.000Z'),
         },
         {
-          amount: 2000,
-          companyId: '30405060708',
-          creditAccount: '0987654321',
-          debitAccount: '1234567890',
-          date: new Date('2025-03-20'),
+          amount: 1500.75,
+          companyId: '20-37121543-7',
+          creditAccount: '2233445566',
+          debitAccount: '6655443322',
+          date: new Date('2025-04-15T12:00:00.000Z'),
         },
       ];
 
-      transferModel.find.mockReturnValueOnce({
+      const mockFind = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockTransfers),
-      } as any);
+      });
+      transferModel.find = mockFind;
 
       const result = await repository.findByDateRange(startDate, endDate);
 
-      expect(transferModel.find).toHaveBeenCalledWith({
-        date: { $gte: startDate, $lte: endDate },
-      });
-      expect(result).toEqual(mockTransfers.map(
-        (t) => new Transfer(t.amount, t.companyId, t.creditAccount, t.debitAccount, t.date),
-      ));
+      expect(mockFind).toHaveBeenCalledWith({ date: { $gte: startDate, $lte: endDate } });
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(
+        new Transfer(
+          mockTransfers[0].amount,
+          mockTransfers[0].companyId,
+          mockTransfers[0].creditAccount,
+          mockTransfers[0].debitAccount,
+          mockTransfers[0].date,
+        ),
+      );
+      expect(result[1]).toEqual(
+        new Transfer(
+          mockTransfers[1].amount,
+          mockTransfers[1].companyId,
+          mockTransfers[1].creditAccount,
+          mockTransfers[1].debitAccount,
+          mockTransfers[1].date,
+        ),
+      );
     });
 
-    it('should return an empty list if no transfers are found in the given date range', async () => {
-      const startDate = new Date('2025-03-01');
-      const endDate = new Date('2025-03-31');
+    it('should return an empty array if no transfers are found', async () => {
+      const startDate = new Date('2025-04-01T00:00:00.000Z');
+      const endDate = new Date('2025-04-30T23:59:59.999Z');
 
-      transferModel.find.mockReturnValueOnce({
+      const mockFind = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue([]),
-      } as any);
+      });
+      transferModel.find = mockFind;
 
       const result = await repository.findByDateRange(startDate, endDate);
 
-      expect(transferModel.find).toHaveBeenCalledWith({
-        date: { $gte: startDate, $lte: endDate },
-      });
-      expect(result).toEqual([]);
+      expect(mockFind).toHaveBeenCalledWith({ date: { $gte: startDate, $lte: endDate } });
+      expect(result).toHaveLength(0);
     });
   });
 });

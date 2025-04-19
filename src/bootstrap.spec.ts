@@ -33,7 +33,7 @@ describe('Bootstrap Function', () => {
     mockApp.get.mockReturnValue(mockConfigService);
 
     // Importa la función bootstrap desde el archivo original
-    const { bootstrap } = await import('./main'); // Se asume que el archivo se llama `main.ts`
+    const { bootstrap } = await import('./main'); 
 
     await bootstrap();
 

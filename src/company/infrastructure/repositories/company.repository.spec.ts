@@ -1,90 +1,132 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CompanyRepositoryMongoAdapter } from './company.repository';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CompanyDocument } from '../interface/company.document';
 import { Company } from '../../../company/domain';
-import { CompanyRepositoryMongoAdapter } from './company.repository';
+import { CompanyDocument } from '../interface/company.document';
 
 describe('CompanyRepositoryMongoAdapter', () => {
-    let repository: CompanyRepositoryMongoAdapter;
-    let companyModel: jest.Mocked<Model<CompanyDocument>>;
+  let repository: CompanyRepositoryMongoAdapter;
+  let companyModel: Model<CompanyDocument>;
 
-    beforeEach(async () => {
-        companyModel = {
-            create: jest.fn(),
-            save: jest.fn(),
-            exists: jest.fn(),
-            find: jest.fn(),
-            findOne: jest.fn(),
-        } as any;
+  // Mock del modelo de Mongoose que simula el constructor
+  const mockCompanyModel = jest.fn().mockImplementation(function (this: any, data: any) {
+    Object.assign(this, data);
+    return {
+      save: jest.fn().mockResolvedValue(this), 
+    };
+  });
 
-        const module: TestingModule = await Test.createTestingModule({
-            providers: [
-                CompanyRepositoryMongoAdapter,
-                {
-                    provide: getModelToken('Company'),
-                    useValue: companyModel,
-                },
-            ],
-        }).compile();
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CompanyRepositoryMongoAdapter,
+        {
+          provide: getModelToken('Company'),
+          useValue: mockCompanyModel,
+        },
+      ],
+    }).compile();
 
-        repository = module.get<CompanyRepositoryMongoAdapter>(CompanyRepositoryMongoAdapter);
+    repository = module.get<CompanyRepositoryMongoAdapter>(CompanyRepositoryMongoAdapter);
+    companyModel = module.get<Model<CompanyDocument>>(getModelToken('Company'));
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('save', () => {
+    it('should save a company and return it', async () => {
+      const company = new Company('20-12345678-9', 'Test Business', new Date('2025-04-01'));
+
+      const result = await repository.save(company);
+
+      expect(mockCompanyModel).toHaveBeenCalledWith({
+        cuit: company.cuit,
+        businessName: company.businessName,
+        registrationDate: company.registrationDate,
+      });
+      expect(result).toEqual(company);
+    });
+  });
+
+  describe('existsByCuit', () => {
+    it('should return true if the company exists', async () => {
+      const existsMock = jest.fn().mockResolvedValue(true);
+      (companyModel as any).exists = existsMock;
+
+      const result = await repository.existsByCuit('20-12345678-9');
+
+      expect(existsMock).toHaveBeenCalledWith({ cuit: '20-12345678-9' });
+      expect(result).toBe(true);
     });
 
-    it('should be defined', () => {
-        expect(repository).toBeDefined();
+    it('should return false if the company does not exist', async () => {
+      const existsMock = jest.fn().mockResolvedValue(null);
+      (companyModel as any).exists = existsMock;
+
+      const result = await repository.existsByCuit('20-12345678-9');
+
+      expect(existsMock).toHaveBeenCalledWith({ cuit: '20-12345678-9' });
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('findCompaniesRegisteredLastMonth', () => {
+    it('should return companies registered in the last month', async () => {
+      const now = new Date();
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(now.getMonth() - 1);
+
+      const mockCompanies = [
+        { cuit: '20-12345678-9', businessName: 'Test Business A', registrationDate: oneMonthAgo },
+        { cuit: '20-87654321-0', businessName: 'Test Business B', registrationDate: now },
+      ];
+
+      const findMock = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockCompanies),
+      });
+      (companyModel as any).find = findMock;
+
+      const result = await repository.findCompaniesRegisteredLastMonth();
+
+      expect(findMock).toHaveBeenCalledWith({ registrationDate: { $gte: oneMonthAgo } });
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(new Company('20-12345678-9', 'Test Business A', oneMonthAgo));
+      expect(result[1]).toEqual(new Company('20-87654321-0', 'Test Business B', now));
+    });
+  });
+
+  describe('findByCuit', () => {
+    it('should return a company if found', async () => {
+      const mockCompany = {
+        cuit: '20-12345678-9',
+        businessName: 'Test Business',
+        registrationDate: new Date('2025-04-01'),
+      };
+
+      const findOneMock = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockCompany),
+      });
+      (companyModel as any).findOne = findOneMock;
+
+      const result = await repository.findByCuit('20-12345678-9');
+
+      expect(findOneMock).toHaveBeenCalledWith({ cuit: '20-12345678-9' });
+      expect(result).toEqual(new Company('20-12345678-9', 'Test Business', new Date('2025-04-01')));
     });
 
+    it('should return null if no company is found', async () => {
+      const findOneMock = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
+      (companyModel as any).findOne = findOneMock;
 
+      const result = await repository.findByCuit('20-12345678-9');
 
-
-    describe('findCompaniesRegisteredLastMonth', () => {
-        it('should return a list of companies registered last month', async () => {
-            const now = new Date();
-            const oneMonthAgo = new Date();
-            oneMonthAgo.setMonth(now.getMonth() - 1);
-
-            const mockCompanies = [
-                { cuit: '20304050607', businessName: 'Company A', registrationDate: oneMonthAgo },
-                { cuit: '30405060708', businessName: 'Company B', registrationDate: oneMonthAgo },
-            ];
-
-            companyModel.find.mockReturnValueOnce({
-                exec: jest.fn().mockResolvedValue(mockCompanies),
-            } as any);
-
-            const result = await repository.findCompaniesRegisteredLastMonth();
-
-            expect(companyModel.find).toHaveBeenCalledWith({ registrationDate: { $gte: oneMonthAgo } });
-            expect(result).toEqual(mockCompanies.map(
-                (company) => new Company(company.cuit, company.businessName, company.registrationDate),
-            ));
-        });
+      expect(findOneMock).toHaveBeenCalledWith({ cuit: '20-12345678-9' });
+      expect(result).toBeNull();
     });
-
-    describe('findByCuit', () => {
-        it('should return a company with the given CUIT', async () => {
-            const mockCompany = { cuit: '20304050607', businessName: 'Company A', registrationDate: new Date('2025-03-15') };
-
-            companyModel.findOne.mockReturnValueOnce({
-                exec: jest.fn().mockResolvedValue(mockCompany),
-            } as any);
-
-            const result = await repository.findByCuit('20304050607');
-
-            expect(companyModel.findOne).toHaveBeenCalledWith({ cuit: '20304050607' });
-            expect(result).toEqual(new Company(mockCompany.cuit, mockCompany.businessName, mockCompany.registrationDate));
-        });
-
-        it('should return null if no company with the given CUIT exists', async () => {
-            companyModel.findOne.mockReturnValueOnce({
-                exec: jest.fn().mockResolvedValue(null),
-            } as any);
-
-            const result = await repository.findByCuit('20304050607');
-
-            expect(companyModel.findOne).toHaveBeenCalledWith({ cuit: '20304050607' });
-            expect(result).toBeNull();
-        });
-    });
+  });
 });

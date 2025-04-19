@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { CompanyModule } from './company/company.module';
 import { TransferModule } from './transfer/transfer.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
