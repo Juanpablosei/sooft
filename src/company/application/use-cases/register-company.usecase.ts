@@ -1,7 +1,5 @@
 import { Company, CompanyRepository } from "../../../company/domain";
 
-
-
 export class SaveCompanyUseCase {
   constructor(private readonly companyRepository: CompanyRepository) {}
 

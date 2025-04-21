@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CompanyModule } from './company/company.module';
 import { TransferModule } from './transfer/transfer.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 
 
@@ -20,6 +21,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
     CompanyModule,
     TransferModule,
+    AuthModule
+    
   ],
 })
 export class AppModule {}
