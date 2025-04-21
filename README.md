@@ -4,6 +4,17 @@ La aplicación contiene las siguientes rutas para manejar compañías y transfer
 
 ## Rutas de la API
 
+## Configuración del archivo `.env`
+El archivo `.env` debe incluir las siguientes variables de entorno:
+
+```dotenv
+PORT=3000
+MONGODB_URI='mongodb+srv://root-user:gcfkCb490BWDGGXe@cluster0.4c1x2.mongodb.net/libreria'
+```
+
+Estas variables configuran el puerto en el que corre la aplicación y la conexión a la base de datos MongoDB.
+
+---
 ### 1. Crear una compañía
 **Endpoint:**
 ```
@@ -16,7 +27,7 @@ Crea una nueva compañía en el sistema.
 **Cuerpo de la solicitud (JSON):**
 ```json
 {
-  "cuit": "string",         // CUIT de la compañía
+  "cuit": "string",          // CUIT de la compañía xx-12345678-x
   "businessName": "string"  // Nombre de la compañía
 }
 ```
