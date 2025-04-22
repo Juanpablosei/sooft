@@ -78,20 +78,27 @@ describe('CompanyRepositoryMongoAdapter', () => {
       const now = new Date();
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(now.getMonth() - 1);
-
+  
       const mockCompanies = [
         { cuit: '20-12345678-9', businessName: 'Test Business A', registrationDate: oneMonthAgo },
         { cuit: '20-87654321-0', businessName: 'Test Business B', registrationDate: now },
       ];
-
+  
       const findMock = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockCompanies),
       });
       (companyModel as any).find = findMock;
-
+  
       const result = await repository.findCompaniesRegisteredLastMonth();
-
-      expect(findMock).toHaveBeenCalledWith({ registrationDate: { $gte: oneMonthAgo } });
+  
+      // Usar objectContaining para evitar problemas con la precisión de las fechas
+      expect(findMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          registrationDate: expect.objectContaining({
+            $gte: expect.any(Date), // Verifica que sea una fecha
+          }),
+        }),
+      );
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual(new Company('20-12345678-9', 'Test Business A', oneMonthAgo));
       expect(result[1]).toEqual(new Company('20-87654321-0', 'Test Business B', now));

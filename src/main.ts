@@ -3,6 +3,8 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 
 
@@ -15,6 +17,18 @@ export async function bootstrap() {
     forbidNonWhitelisted: true,
     transform: true,            
   }));
+
+  app.use(helmet());
+
+  
+  app.use(
+    rateLimit({
+      windowMs: 60 * 1000, 
+      max: 100, 
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
 
   const config = new DocumentBuilder()
   .setTitle('API Documentation')

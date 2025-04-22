@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { CompanyRepository } from '../../../company/domain';
-import { Transfer, TransferRepository } from 'src/transfer/domain';
+import { Transfer, TransferRepository } from '../../../transfer/domain';
 
 
 export class CreateTransferUseCase {

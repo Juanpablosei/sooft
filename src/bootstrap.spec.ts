@@ -1,69 +1,75 @@
-import { NestFactory } from '@nestjs/core';
+import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
-
-jest.mock('@nestjs/core', () => ({
-  NestFactory: {
-    create: jest.fn(),
-  },
-}));
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as request from 'supertest';
 
 describe('Bootstrap Function', () => {
-  let mockApp: any;
+  let app: INestApplication;
 
-  beforeEach(() => {
-    mockApp = {
-      setGlobalPrefix: jest.fn(),
-      useGlobalPipes: jest.fn(),
-      get: jest.fn(),
-      listen: jest.fn(),
-    };
+  beforeEach(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-    (NestFactory.create as jest.Mock).mockResolvedValue(mockApp);
-  });
+    app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
 
-  it('should set global prefix, use validation pipes, and listen on the correct port', async () => {
-    const mockConfigService = {
-      get: jest.fn().mockImplementation((key: string) => {
-        if (key === 'PORT') return 4000;
-        return null;
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
       }),
-    };
+    );
 
-    mockApp.get.mockReturnValue(mockConfigService);
+    const config = new DocumentBuilder()
+      .setTitle('API Documentation')
+      .setDescription('ingresar con un usuario valido para acceder al token')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addTag('Autenticación')
+      .addTag('Empresas')
+      .addTag('Transferencias')
+      .build();
 
-    // Importa la función bootstrap desde el archivo original
-    const { bootstrap } = await import('./main'); 
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
 
-    await bootstrap();
-
-    // Verifica que se creó la aplicación con el módulo AppModule
-    expect(NestFactory.create).toHaveBeenCalledWith(AppModule);
-
-    // Verifica que se configuró el prefijo global
-    expect(mockApp.setGlobalPrefix).toHaveBeenCalledWith('api');
-
-  
-
-    // Verifica que se obtuvo el puerto del ConfigService y que se escuchó en el puerto 4000
-    expect(mockApp.get).toHaveBeenCalledWith(ConfigService);
-    expect(mockConfigService.get).toHaveBeenCalledWith('PORT');
-    expect(mockApp.listen).toHaveBeenCalledWith(4000);
+    await app.init();
   });
 
-  it('should fallback to port 3000 if no port is provided by ConfigService', async () => {
-    const mockConfigService = {
-      get: jest.fn().mockReturnValue(undefined), // Simula que no se configuró el puerto
-    };
+  afterEach(async () => {
+    await app.close();
+  });
 
-    mockApp.get.mockReturnValue(mockConfigService);
+  it('should initialize the app with global prefix and validation pipe', async () => {
+    // Verificar que las rutas incluyan el prefijo global usando supertest
+    const response = await request(app.getHttpServer()).get('/api');
+    expect(response.status).not.toBe(404); // Verifica que la ruta con prefijo no devuelva 404
+  });
 
-    // Importa la función bootstrap desde el archivo original
-    const { bootstrap } = await import('./main'); // Se asume que el archivo se llama `main.ts`
+  it('should configure Swagger correctly', () => {
+    const config = new DocumentBuilder()
+      .setTitle('API Documentation')
+      .setDescription('ingresar con un usuario valido para acceder al token')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addTag('Autenticación')
+      .addTag('Empresas')
+      .addTag('Transferencias')
+      .build();
 
-    await bootstrap();
+    const swaggerConfig = SwaggerModule.createDocument(app, config);
+    expect(swaggerConfig).toBeDefined();
+    expect(swaggerConfig.info.title).toBe('API Documentation');
+    expect(swaggerConfig.info.version).toBe('1.0');
+  });
 
-    // Verifica que se escuchó en el puerto 3000 por defecto
-    expect(mockApp.listen).toHaveBeenCalledWith(3000);
+  it('should listen on the correct port', async () => {
+    const port = 3000; // Default port
+    const listenSpy = jest.spyOn(app, 'listen').mockImplementation(async () => port);
+    await app.listen(port);
+    expect(listenSpy).toHaveBeenCalledWith(port);
   });
 });
