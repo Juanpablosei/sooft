@@ -1,20 +1,23 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { AppModule } from './app.module';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as request from 'supertest';
+import helmet from 'helmet';
+import request from 'supertest';
+import rateLimit from 'express-rate-limit';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
-describe('Bootstrap Function', () => {
+describe('main', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api');
+    app = moduleRef.createNestApplication();
 
+    
+    app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -23,53 +26,41 @@ describe('Bootstrap Function', () => {
       }),
     );
 
-    const config = new DocumentBuilder()
-      .setTitle('API Documentation')
-      .setDescription('ingresar con un usuario valido para acceder al token')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .addTag('Autenticación')
-      .addTag('Empresas')
-      .addTag('Transferencias')
-      .build();
+    app.use(helmet());
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    app.use(
+      rateLimit({
+        windowMs: 60 * 1000,
+        max: 100,
+        standardHeaders: true,
+        legacyHeaders: false,
+      }),
+    );
+
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 
-  it('should initialize the app with global prefix and validation pipe', async () => {
-    // Verificar que las rutas incluyan el prefijo global usando supertest
-    const response = await request(app.getHttpServer()).get('/api');
-    expect(response.status).not.toBe(404); // Verifica que la ruta con prefijo no devuelva 404
+  it('should start the app and return 404 for unknown route', async () => {
+    const res = await request(app.getHttpServer()).get('/api/unknown');
+    expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('statusCode', 404);
+    expect(res.body).toHaveProperty('message');
+    expect(res.body).toHaveProperty('timestamp');
+    expect(res.body).toHaveProperty('path', '/api/unknown');
   });
 
-  it('should configure Swagger correctly', () => {
-    const config = new DocumentBuilder()
-      .setTitle('API Documentation')
-      .setDescription('ingresar con un usuario valido para acceder al token')
-      .setVersion('1.0')
-      .addBearerAuth()
-      .addTag('Autenticación')
-      .addTag('Empresas')
-      .addTag('Transferencias')
-      .build();
-
-    const swaggerConfig = SwaggerModule.createDocument(app, config);
-    expect(swaggerConfig).toBeDefined();
-    expect(swaggerConfig.info.title).toBe('API Documentation');
-    expect(swaggerConfig.info.version).toBe('1.0');
+  it('should have the global prefix set', async () => {
+    const res = await request(app.getHttpServer()).get('/');
+    expect(res.status).not.toBe(200); // La raíz '/' no existe, debe devolver algo como 404
   });
 
-  it('should listen on the correct port', async () => {
-    const port = 3000; // Default port
-    const listenSpy = jest.spyOn(app, 'listen').mockImplementation(async () => port);
-    await app.listen(port);
-    expect(listenSpy).toHaveBeenCalledWith(port);
-  });
+
+
+  
 });
