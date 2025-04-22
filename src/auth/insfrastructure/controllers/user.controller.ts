@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { UserDto } from '../../../auth/application/dto/user.dto';
 import { AuthenticateUserUseCase } from '../../../auth/application/use-cases/authenticateUserUseCase';
 import { RegisterUserUseCase } from '../../../auth/application/use-cases/register.usecase';
@@ -32,11 +32,15 @@ export class AuthController {
     try {
       const user = await this.registerUserUseCase.execute(userDto)
       if(!user){
-        return { message: 'User already exists' };
+        throw new ConflictException('El email ya está registrado');
+
       }
       return { message: 'User registered successfully', user };
     } catch (error) {
-       throw new Error('An error occurred while registering the user');
+      if (error instanceof BadRequestException) {
+        throw error; 
+      }
+      throw new BadRequestException(error.message || 'Error al registrar el usuario');
     }
   }
 }
