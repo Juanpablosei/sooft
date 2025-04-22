@@ -42,6 +42,6 @@ export class UserRepositoryMongoAdapter implements UserRepository {
   }
 
   async updateToken(email: string, token: string): Promise<void> {
-    await this.userModel.updateOne({ email }, { token }).exec();
+    await this.userModel.updateOne( { token },{ email }).exec();
   }
 }

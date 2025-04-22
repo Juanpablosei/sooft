@@ -4,7 +4,10 @@ import { SaveCompanyUseCase } from "../../../company/application/use-cases/regis
 import { GetCompaniesLastMonthUseCase } from "../../../company/application/use-cases/get-companies-last-month.usecase";
 import { Company } from "../../../company/domain";
 import { JwtAuthGuard } from "../../../auth/insfrastructure/guards/jwt-auth.guard";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 
+@ApiTags('Empresas')
+@ApiBearerAuth()
 @Controller('companies')
 export class CompanyController {
   constructor(
@@ -13,6 +16,9 @@ export class CompanyController {
   ) {}
   @UseGuards(JwtAuthGuard)
   @Post('create')
+  @ApiOperation({ summary: 'Crear una nueva empresa' })
+  @ApiResponse({ status: 201, description: 'Empresa creada exitosamente.' })
+  @ApiResponse({ status: 409, description: 'La empresa ya existe.' })
   async create(@Body() companyDto: CreateCompanyDto): Promise<Company> {
     try {
       const company = new Company(
@@ -31,6 +37,8 @@ export class CompanyController {
     }
   }
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Obtener empresas creadas en el último mes' })
+  @ApiResponse({ status: 200, description: 'Lista de empresas.' })
   @Get('last-month')
   async findLastMonth(): Promise<Company[]> {
     return await this.getCompaniesLastMonthUseCase.execute();
