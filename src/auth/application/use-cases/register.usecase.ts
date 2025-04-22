@@ -1,4 +1,4 @@
-import { UserRepository } from '../../domain/repositories/user.repository';
+import { UserRepository } from '../../domain/repositories/user.repository.port';
 import { User } from '../../domain/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { UserDto } from '../dto/user.dto';

@@ -2,21 +2,20 @@ import { Controller, Post, Body, UnauthorizedException, ConflictException } from
 import { UserDto } from '../../../auth/application/dto/user.dto';
 import { AuthenticateUserUseCase } from '../../../auth/application/use-cases/authenticateUserUseCase';
 import { RegisterUserUseCase } from '../../../auth/application/use-cases/register.usecase';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authenticateUserUseCase: AuthenticateUserUseCase,
     private readonly registerUserUseCase: RegisterUserUseCase,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Post('login')
   async login(@Body() userDto: UserDto) {
-    const user = await this.authenticateUserUseCase.execute(userDto);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return { message: 'Login successful', user };
+    const token = await this.authenticateUserUseCase.execute(userDto);
+    return { message: 'Login successful', token };
   }
 
   @Post('register')

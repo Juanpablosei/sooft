@@ -5,11 +5,14 @@ import { SaveCompanyUseCase } from './application/use-cases/register-company.use
 import { CompanyController } from './infrastructure/controllers/company.controller';
 import { CompanyRepositoryMongoAdapter } from './infrastructure/repositories/company.repository';
 import { GetCompaniesLastMonthUseCase } from './application/use-cases/get-companies-last-month.usecase';
+import { AuthModule } from 'src/auth/auth.module';
 
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Company', schema: CompanySchema }]),
+    AuthModule,
+    
   ],
   controllers: [CompanyController],
   providers: [
