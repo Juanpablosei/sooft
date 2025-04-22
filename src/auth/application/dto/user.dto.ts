@@ -4,7 +4,7 @@ import { IsString, IsNotEmpty, IsEmail, Matches } from 'class-validator';
 
 export class UserDto {
 
-  @ApiProperty({ example: 'user@example.com', description: 'Correo electrónico del usuario' })
+  @ApiProperty({ example: 'user2@example.com', description: 'Correo electrónico del usuario' })
   @IsEmail()
   @IsNotEmpty()
   @Transform(({ value }) => value.trim().toLowerCase())
@@ -13,7 +13,7 @@ export class UserDto {
   @ApiProperty({ example: 'password123', description: 'Contraseña del usuario' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^(?=(?:.*\d){6,})(?=.*[a-zA-Z]).{8,}$/, {
+  @Matches(/^(?=.*[a-zA-Z]).{8,}$/, {
     message: 'La contraseña debe tener al menos 8 caracteres, 6 números y una letra',
   })
   public readonly password: string;
