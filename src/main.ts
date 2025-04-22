@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 
 
@@ -30,6 +31,8 @@ export async function bootstrap() {
     }),
   );
 
+  
+
   const config = new DocumentBuilder()
   .setTitle('API Documentation')
   
@@ -43,6 +46,8 @@ export async function bootstrap() {
 
 const document = SwaggerModule.createDocument(app, config);
 SwaggerModule.setup('api', app, document);
+
+app.useGlobalFilters(new AllExceptionsFilter());
 
 
   const configService = app.get(ConfigService);
